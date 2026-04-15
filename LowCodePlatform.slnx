@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="LowCode.Application/LowCode.Application.csproj" />
+  <Project Path="LowCode.Domain/LowCode.Domain.csproj" />
+  <Project Path="LowCode.Infrastructure/LowCode.Infrastructure.csproj" />
+  <Project Path="LowCode.Web.Api/LowCode.Web.Api.csproj" />
+</Solution>
