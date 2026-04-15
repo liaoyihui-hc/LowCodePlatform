@@ -17,7 +17,8 @@ namespace LowCode.Infrastructure
         public LowCodeDbContext(DbContextOptions<LowCodeDbContext> options) : base(options)
         {
         }
-
+        // 低代码表单表（唯一新增行，其他都是你原有代码）
+        public DbSet<FormDefinition> FormDefinitions { get; set; }
         // 业务表映射（保留）
         public DbSet<PageEntity> Pages => Set<PageEntity>();
         public DbSet<ComponentMetaEntity> ComponentMetas => Set<ComponentMetaEntity>();

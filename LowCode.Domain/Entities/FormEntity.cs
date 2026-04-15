@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LowCode.Domain.Entities
 {
-    public class FormEntity
+    public class FormEntity:BaseEntity
     {/// <summary>
      /// 表单唯一ID
      /// </summary>
