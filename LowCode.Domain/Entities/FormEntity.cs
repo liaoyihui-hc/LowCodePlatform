@@ -42,10 +42,20 @@ namespace LowCode.Domain.Entities
         /// 是否启用数据存储：0-不存储 1-存储（自动生成表存储表单提交数据）
         /// </summary>
         public int IsSaveData { get; set; } = 0;
+        /// <summary>
+        /// 🔥 新增：表单状态 0=草稿 1=已发布
+        /// </summary>
+        public int Status { get; set; } = 0;
+
+        /// <summary>
+        /// 🔥 新增：绑定的数据源ID
+        /// </summary>
+        public Guid DatasourceId { get; set; }
 
         /// <summary>
         /// 创建时间
         /// </summary>
+        /// 
         public DateTime CreateTime { get; set; } = DateTime.Now;
 
         /// <summary>

@@ -75,6 +75,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPageService, PageService>();
 builder.Services.AddScoped<IComponentMetaService, ComponentMetaService>(); // 👈 新增这行
 builder.Services.AddScoped<IFormService, FormService>();
+// 注册表单服务
+builder.Services.AddScoped<IFormService, FormService>();
 var app = builder.Build();
 // 全局异常处理中间件（必须放在最前面！）
 app.UseMiddleware<GlobalExceptionMiddleware>();

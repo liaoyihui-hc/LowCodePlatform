@@ -83,6 +83,20 @@ namespace LowCode.Infrastructure
                     Sort = 2
                 }
             );
+
+
+        }
+
+        // 🔥 修正：仅修改时更新 UpdateTime，新增由实体默认值处理
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            // 只处理【修改操作】的更新时间
+            foreach (var item in ChangeTracker.Entries<BaseEntity>().Where(x => x.State == EntityState.Modified))
+            {
+                item.Entity.UpdateTime = DateTime.Now;
+            }
+
+            return base.SaveChangesAsync(cancellationToken);
         }
     }
 }
