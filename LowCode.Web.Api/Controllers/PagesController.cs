@@ -25,7 +25,7 @@ namespace LowCode.Web.Api.Controllers
         public async Task<ApiResult<List<PageEntity>>> GetPageList()
         {
             var list = await _pageService.GetPageListAsync();
-            return ApiResult<List<PageEntity>>.Success(list);
+            return ApiResult<List<PageEntity>>.Success(list.Data);
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace LowCode.Web.Api.Controllers
         public async Task<ApiResult<PageEntity?>> GetPageById(Guid id)
         {
             var page = await _pageService.GetPageByIdAsync(id);
-            return ApiResult<PageEntity?>.Success(page);
+            return ApiResult<PageEntity?>.Success(page.Data);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace LowCode.Web.Api.Controllers
         public async Task<ApiResult<PageEntity?>> GetPublishedPage(string pageName)
         {
             var page = await _pageService.GetPublishedPageByNameAsync(pageName);
-            return ApiResult<PageEntity?>.Success(page);
+            return ApiResult<PageEntity?>.Success(page.Data);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace LowCode.Web.Api.Controllers
         public async Task<ApiResult<Guid>> CreatePage([FromBody] PageEntity entity)
         {
             var pageId = await _pageService.CreatePageAsync(entity);
-            return ApiResult<Guid>.Success(pageId);
+            return ApiResult<Guid>.Success(pageId.Data);
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace LowCode.Web.Api.Controllers
         public async Task<ApiResult<bool>> UpdatePage([FromBody] PageEntity entity)
         {
             var result = await _pageService.UpdatePageAsync(entity);
-            return ApiResult<bool>.Success(result);
+            return ApiResult<bool>.Success(result.Data);
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace LowCode.Web.Api.Controllers
         public async Task<ApiResult<bool>> DeletePage(Guid id)
         {
             var result = await _pageService.DeletePageAsync(id);
-            return ApiResult<bool>.Success(result);
+            return ApiResult<bool>.Success(result.Data);
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace LowCode.Web.Api.Controllers
         public async Task<ApiResult<bool>> PublishPage(Guid id, [FromQuery] int publishStatus)
         {
             var result = await _pageService.PublishPageAsync(id, publishStatus);
-            return ApiResult<bool>.Success(result);
+            return ApiResult<bool>.Success(result.Data);
         }
     }
 }

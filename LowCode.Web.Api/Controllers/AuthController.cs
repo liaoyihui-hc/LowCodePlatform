@@ -16,14 +16,14 @@ namespace LowCode.Web.Api.Controllers
         public async Task<ApiResult<TokenResponse>> Login([FromBody] LoginRequest request)
         {
             var res = await _authService.LoginAsync(request);
-            return ApiResult<TokenResponse>.Success(res);
+            return ApiResult<TokenResponse>.Success(res.Data);
         }
 
         [HttpPost("register")]
         public async Task<ApiResult<Guid>> Register([FromBody] RegisterRequest request)
         {
             var id = await _authService.RegisterAsync(request);
-            return ApiResult<Guid>.Success(id);
+            return ApiResult<Guid>.Success(id.Data);
         }
 
     }

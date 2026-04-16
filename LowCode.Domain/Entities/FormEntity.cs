@@ -6,11 +6,7 @@ using System.Text;
 namespace LowCode.Domain.Entities
 {
     public class FormEntity:BaseEntity
-    {/// <summary>
-     /// 表单唯一ID
-     /// </summary>
-        [Key]
-        public Guid Id { get; set; }
+    {
 
         /// <summary>
         /// 表单名称
@@ -56,11 +52,6 @@ namespace LowCode.Domain.Entities
         /// 创建时间
         /// </summary>
         /// 
-        public DateTime CreateTime { get; set; } = DateTime.Now;
 
-        /// <summary>
-        /// 最后更新时间
-        /// </summary>
-        public DateTime UpdateTime { get; set; } = DateTime.Now;
     }
 }

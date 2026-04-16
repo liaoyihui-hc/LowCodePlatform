@@ -84,8 +84,12 @@ var app = builder.Build();
 // 1. 全局异常中间件（最优先）
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-// 2. 模型验证中间件
-app.UseMiddleware<ModelValidationMiddleware>();
+// Add services to the container.
+builder.Services.AddControllers(options =>
+{
+    // 注册全局模型验证过滤器
+    options.Filters.Add<ModelValidationFilter>();
+});
 
 // 3. 开发环境 Swagger
 if (app.Environment.IsDevelopment())
