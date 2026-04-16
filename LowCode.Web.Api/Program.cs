@@ -1,5 +1,5 @@
 using LowCode.Application.Interfaces;
-using LowCode.Application.Services;    // 引用实现类 👈 关键是这个！
+using LowCode.Application.Services;
 using LowCode.Domain.Entities;
 using LowCode.Infrastructure;
 using LowCode.Infrastructure.Data;
@@ -10,24 +10,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 
-// 2. 添加Swagger接口文档服务（VS自带，开发环境用）
+// Swagger 配置（修复冲突，保留标准用法）
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "LowCode API", Version = "v1" });
+});
 
-
-builder.Services.AddSwaggerGen(); // 就这一行，不报错！
-
-// 1. 数据库上下文 + Identity 核心配置（必须改这里！）
+// 数据库上下文 + Identity
 builder.Services.AddDbContext<LowCodeDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("LowCodeDb")));
-// 👇 关键修复：注册 ASP.NET Core Identity（你之前漏了这个，导致密码加密/验证失败）
+
 builder.Services.AddIdentity<UserEntity, RoleEntity>(options =>
 {
     options.Password.RequireDigit = true;
@@ -39,7 +38,8 @@ builder.Services.AddIdentity<UserEntity, RoleEntity>(options =>
 })
 .AddEntityFrameworkStores<LowCodeDbContext>()
 .AddDefaultTokenProviders();
-// 4. JWT 认证配置
+
+// JWT 认证
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var secretKey = Encoding.UTF8.GetBytes(jwtSection["SecretKey"]!);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -58,47 +58,53 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     };
 });
 
-// 5. 配置跨域
+// 跨域配置（修改为你前端的 3002 端口）
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:3002")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
-// 6. 注册业务服务
 
+// 业务服务注册（删除重复的 FormService）
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPageService, PageService>();
-builder.Services.AddScoped<IComponentMetaService, ComponentMetaService>(); // 👈 新增这行
+builder.Services.AddScoped<IComponentMetaService, ComponentMetaService>();
 builder.Services.AddScoped<IFormService, FormService>();
-// 注册表单服务
-builder.Services.AddScoped<IFormService, FormService>();
+
 var app = builder.Build();
-// 全局异常处理中间件（必须放在最前面！）
+
+// 1. 全局异常中间件（最优先）
 app.UseMiddleware<GlobalExceptionMiddleware>();
-// Configure the HTTP request pipeline.
+
+// 2. 开发环境 Swagger
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI(); // 访问地址：http://localhost:xxxx/swagger
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "LowCode API V1"));
 }
-// 启用跨域（必须放在路由之后，控制器之前，顺序不能错）
-app.UseCors("AllowVueFrontend");
 
-// 启用路由
-app.UseRouting();
+// ------------------------------
+// ✅ 官方固定中间件顺序（核心！）
+// ------------------------------
+// 3. HTTPS重定向
 app.UseHttpsRedirection();
-// 核心：认证必须在授权之前
+// 4. 路由
+app.UseRouting();
+// 5. 跨域（必须在 认证/授权 之前！）
+app.UseCors("AllowVueFrontend");
+// 6. 认证 → 7. 授权
 app.UseAuthentication();
 app.UseAuthorization();
 
+// 映射控制器
 app.MapControllers();
-// 👇 最后：自动初始化管理员账号（密码自动加密）
+
+// 初始化数据
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -112,4 +118,5 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"❌ 初始化失败：{ex.Message}");
     }
 }
+
 app.Run();
