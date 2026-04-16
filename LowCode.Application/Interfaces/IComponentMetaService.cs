@@ -1,4 +1,5 @@
-﻿using LowCode.Domain.Entities;
+﻿﻿using LowCode.Domain.Entities;
+using LowCode.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,12 +8,12 @@ namespace LowCode.Application.Interfaces
 {
     public interface IComponentMetaService
     {
-        Task<List<ComponentMetaEntity>> GetComponentListAsync();
-        Task<ComponentMetaEntity?> GetComponentByIdAsync(Guid id);
-        Task<ComponentMetaEntity?> GetComponentByTypeAsync(string componentType);
-        Task<Guid> CreateComponentAsync(ComponentMetaEntity entity);
-        Task<bool> UpdateComponentAsync(ComponentMetaEntity entity);
-        Task<bool> DeleteComponentAsync(Guid id);
-        Task<bool> ToggleComponentStatusAsync(Guid id, int isEnable);
+        Task<ApiResult<List<ComponentMetaEntity>>> GetComponentListAsync();
+        Task<ApiResult<ComponentMetaEntity?>> GetComponentByIdAsync(Guid id);
+        Task<ApiResult<ComponentMetaEntity?>> GetComponentByTypeAsync(string componentType);
+        Task<ApiResult<Guid>> CreateComponentAsync(ComponentMetaEntity entity);
+        Task<ApiResult<bool>> UpdateComponentAsync(ComponentMetaEntity entity);
+        Task<ApiResult<bool>> DeleteComponentAsync(Guid id);
+        Task<ApiResult<bool>> ToggleComponentStatusAsync(Guid id, int isEnable);
     }
 }

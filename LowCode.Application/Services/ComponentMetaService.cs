@@ -1,43 +1,78 @@
-﻿using LowCode.Domain.Entities;
+﻿﻿using LowCode.Domain.Entities;
 using LowCode.Infrastructure;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using LowCode.Application.Interfaces;
+using LowCode.Domain.Models;
+using Microsoft.Extensions.Caching.Memory;
+
 namespace LowCode.Application.Services
 {
-   public class ComponentMetaService :IComponentMetaService
-
+    public class ComponentMetaService : IComponentMetaService
     {
-
         private readonly LowCodeDbContext _dbContext;
+        private readonly IMemoryCache _memoryCache;
+        private const string ComponentListCacheKey = "ComponentMeta_List";
+        private const int CacheExpirationMinutes = 30;
 
-        public ComponentMetaService(LowCodeDbContext dbContext)
+        public ComponentMetaService(LowCodeDbContext dbContext, IMemoryCache memoryCache)
         {
             _dbContext = dbContext;
+            _memoryCache = memoryCache;
         }
 
-        public async Task<List<ComponentMetaEntity>> GetComponentListAsync()
+        public async Task<ApiResult<List<ComponentMetaEntity>>> GetComponentListAsync()
         {
-            return await _dbContext.ComponentMetas
+            if (_memoryCache.TryGetValue(ComponentListCacheKey, out List<ComponentMetaEntity> cachedComponents))
+            {
+                return ApiResult<List<ComponentMetaEntity>>.Success(cachedComponents);
+            }
+
+            var list = await _dbContext.ComponentMetas
                 .Where(c => c.IsEnable == 1)
                 .OrderBy(c => c.Sort)
                 .ToListAsync();
+
+            _memoryCache.Set(ComponentListCacheKey, list, TimeSpan.FromMinutes(CacheExpirationMinutes));
+            return ApiResult<List<ComponentMetaEntity>>.Success(list);
         }
 
-        public async Task<ComponentMetaEntity?> GetComponentByIdAsync(Guid id)
+        public async Task<ApiResult<ComponentMetaEntity?>> GetComponentByIdAsync(Guid id)
         {
-            return await _dbContext.ComponentMetas.FindAsync(id);
+            var cacheKey = $"ComponentMeta_{id}";
+            if (_memoryCache.TryGetValue(cacheKey, out ComponentMetaEntity? cachedComponent))
+            {
+                return ApiResult<ComponentMetaEntity?>.Success(cachedComponent);
+            }
+
+            var component = await _dbContext.ComponentMetas.FindAsync(id);
+            if (component != null)
+            {
+                _memoryCache.Set(cacheKey, component, TimeSpan.FromMinutes(CacheExpirationMinutes));
+            }
+            return ApiResult<ComponentMetaEntity?>.Success(component);
         }
 
-        public async Task<ComponentMetaEntity?> GetComponentByTypeAsync(string componentType)
+        public async Task<ApiResult<ComponentMetaEntity?>> GetComponentByTypeAsync(string componentType)
         {
-            return await _dbContext.ComponentMetas
+            var cacheKey = $"ComponentMeta_Type_{componentType}";
+            if (_memoryCache.TryGetValue(cacheKey, out ComponentMetaEntity? cachedComponent))
+            {
+                return ApiResult<ComponentMetaEntity?>.Success(cachedComponent);
+            }
+
+            var component = await _dbContext.ComponentMetas
                 .FirstOrDefaultAsync(c => c.ComponentType == componentType && c.IsEnable == 1);
+            if (component != null)
+            {
+                _memoryCache.Set(cacheKey, component, TimeSpan.FromMinutes(CacheExpirationMinutes));
+            }
+            return ApiResult<ComponentMetaEntity?>.Success(component);
         }
 
-        public async Task<Guid> CreateComponentAsync(ComponentMetaEntity entity)
+        public async Task<ApiResult<Guid>> CreateComponentAsync(ComponentMetaEntity entity)
         {
             var isExist = await _dbContext.ComponentMetas.AnyAsync(c => c.ComponentType == entity.ComponentType);
             if (isExist) throw new Exception("组件类型已存在");
@@ -45,10 +80,12 @@ namespace LowCode.Application.Services
             entity.Id = Guid.NewGuid();
             await _dbContext.ComponentMetas.AddAsync(entity);
             await _dbContext.SaveChangesAsync();
-            return entity.Id;
+
+            ClearComponentCache();
+            return ApiResult<Guid>.Success(entity.Id);
         }
 
-        public async Task<bool> UpdateComponentAsync(ComponentMetaEntity entity)
+        public async Task<ApiResult<bool>> UpdateComponentAsync(ComponentMetaEntity entity)
         {
             var component = await _dbContext.ComponentMetas.FindAsync(entity.Id);
             if (component == null) throw new Exception("组件不存在");
@@ -64,27 +101,38 @@ namespace LowCode.Application.Services
             component.Sort = entity.Sort;
 
             await _dbContext.SaveChangesAsync();
-            return true;
+
+            ClearComponentCache();
+            return ApiResult<bool>.Success(true);
         }
 
-        public async Task<bool> DeleteComponentAsync(Guid id)
+        public async Task<ApiResult<bool>> DeleteComponentAsync(Guid id)
         {
             var component = await _dbContext.ComponentMetas.FindAsync(id);
             if (component == null) throw new Exception("组件不存在");
 
             _dbContext.ComponentMetas.Remove(component);
             await _dbContext.SaveChangesAsync();
-            return true;
+
+            ClearComponentCache();
+            return ApiResult<bool>.Success(true);
         }
 
-        public async Task<bool> ToggleComponentStatusAsync(Guid id, int isEnable)
+        public async Task<ApiResult<bool>> ToggleComponentStatusAsync(Guid id, int isEnable)
         {
             var component = await _dbContext.ComponentMetas.FindAsync(id);
             if (component == null) throw new Exception("组件不存在");
 
             component.IsEnable = isEnable;
             await _dbContext.SaveChangesAsync();
-            return true;
+
+            ClearComponentCache();
+            return ApiResult<bool>.Success(true);
+        }
+
+        private void ClearComponentCache()
+        {
+            _memoryCache.Remove(ComponentListCacheKey);
         }
     }
 }

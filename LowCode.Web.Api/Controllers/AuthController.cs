@@ -1,4 +1,4 @@
-﻿using LowCode.Application.Interfaces;
+﻿﻿using LowCode.Application.Interfaces;
 using LowCode.Domain.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,17 +13,17 @@ namespace LowCode.Web.Api.Controllers
         public AuthController(IAuthService authService) => _authService = authService;
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<ApiResult<TokenResponse>> Login([FromBody] LoginRequest request)
         {
             var res = await _authService.LoginAsync(request);
-            return Ok(res);
+            return ApiResult<TokenResponse>.Success(res);
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<ApiResult<Guid>> Register([FromBody] RegisterRequest request)
         {
             var id = await _authService.RegisterAsync(request);
-            return Ok(id);
+            return ApiResult<Guid>.Success(id);
         }
 
     }

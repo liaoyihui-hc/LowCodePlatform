@@ -1,4 +1,4 @@
-﻿using LowCode.Domain.Models;
+﻿﻿using LowCode.Domain.Models;
 using System.Net;
 using System.Text.Json;
 
@@ -34,7 +34,7 @@ namespace LowCode.Web.Api.Middleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-            var response = ApiResponse<object>.Fail(exception.Message, 500);
+            var response = ApiResult<object>.Fail(exception.Message);
             var json = JsonSerializer.Serialize(response);
 
             return context.Response.WriteAsync(json);

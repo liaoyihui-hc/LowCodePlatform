@@ -70,7 +70,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 业务服务注册（删除重复的 FormService）
+// 缓存服务注册
+builder.Services.AddMemoryCache();
+
+// 业务服务注册
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPageService, PageService>();
 builder.Services.AddScoped<IComponentMetaService, ComponentMetaService>();
@@ -81,7 +84,10 @@ var app = builder.Build();
 // 1. 全局异常中间件（最优先）
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-// 2. 开发环境 Swagger
+// 2. 模型验证中间件
+app.UseMiddleware<ModelValidationMiddleware>();
+
+// 3. 开发环境 Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
